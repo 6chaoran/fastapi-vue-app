@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <!-- app bar -->
+            <v-app-bar app dense dark color="purple">
+                <v-app-bar-nav-icon @click="sidebar=!sidebar"></v-app-bar-nav-icon>
+                <v-app-bar-title>
+                    {{ app_title }}
+                </v-app-bar-title>
+            </v-app-bar>
+
+            <v-main>
+                <!-- fixed side bar -->
+                <v-navigation-drawer absolute right width="350px">
+                    <v-list>
+                        <v-subheader>
+                            User Input
+                        </v-subheader>
+                    </v-list>
+
+                    <v-divider></v-divider>
+
+                    <v-list class="mt-3 px-3">
+                        <v-list-item v-for="p in predictors" :key="p.name">
+                            <v-select v-if="p.type === 'str'" dense :label="p.name" v-model="p.value" outlined
+                                :items="p.items" item-text="name" item-value="value"></v-select>
+                            <v-text-field v-if="p.type === 'int'" dense :label="p.name" v-model="p.value" outlined
+                                clearable></v-text-field>
+                        </v-list-item>
+                    </v-list>
+                    <v-divider class="mt-6"></v-divider>
+                    <v-list>
+                        <v-list-item>
+                            <v-btn text rounded class="mr-3" @click="predict" color="purple" dark>predict</v-btn>
+                            <v-spacer></v-spacer>
+                            <v-btn text rounded class="mr-3" @click="reset" color="purple" dark>reset</v-btn>
+                        </v-list-item>
+                    </v-list>
+                </v-navigation-drawer>
+                <!-- slide side bar -->
+                <v-navigation-drawer v-model="sidebar" absolute left>
+
+                </v-navigation-drawer>
+                <v-container class="shifted">
+                    <h1 class="mb-6">Hello World!</h1>
+                    <h3>Payload:</h3>
+                    <p>{{ payload }}</p>
+                    <div v-if="score">
+                        <h3>Result:</h3>
+                        <p><span :class="{survived: score > 0.5, perished: score <= 0.5}">{{ score > 0.5 ? "Survived" :
+                                "Perished" }} </span>with
+                            probability of survival ({{ score.toFixed(2) }})</p>
+                    </div>
+                    <div v-if="shap_values">
+                        <h3>SHAP values:</h3>
+                        <v-data-table
+                            dense
+                            class="elevation-1 mt-3"
+                            :headers="shap_headers"
+                            :items="shap_values"
+                            hide-default-header
+                            hide-default-footer
+                        ></v-data-table>
+                    </div>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: function () {
+                return {
+                    app_title: "Titanic Survival Prediction",
+                    sidebar: false,
+                    predictors: [
+                        { name: "Age", value: 20, type: "int" },
+                        { name: "Pclass", value: "1", type: "str", items: ["1", "2", "3"] },
+                        { name: "Sex", value: "male", type: "str", items: ["male", "female"] },
+                        { name: "SibSp", value: 1, type: "int" },
+                        { name: "Parch", value: 1, type: "int" },
+                        { name: "Fare", value: 120, type: "int" },
+                        { name: "Embarked", value: "S", type: "str", items: ["S", "C", "Q"] },
+                    ],
+                    score: null,
+                    shap_values: null,
+                    shap_headers: [
+                        {text: 'Predictor', value: 'name'},
+                        {text: 'SHAP value', value: 'value'},
+                    ]
+                }
+            },
+            computed: {
+                payload: function () {
+                    // prepare payload for API
+                    // object key assignment using [ ]
+                    return this.predictors.reduce((acc, cur) => ({ ...acc, [cur.name]: cur.value }), {})
+                }
+            },
+            methods: {
+                predict: function () {
+                    axios.post("/predict", this.payload)
+                        .then(resp => resp.data)
+                        .then(data => {
+                            this.score = data.score
+                            this.shap_values = data.shap_values
+                        })
+                        .catch(e => console.log(e))
+                },
+                reset: function () {
+                    this.score = null
+                    this.shap_values = null
+                },
+            },
+            mounted: function () {
+                // update the app title
+                document.title = this.app_title
+            }
+        })
+    </script>
+    <style>
+        .shifted {
+            /* sidebar width + 50px */
+            margin-right: 400px;
+            /* sidebar width + 2 * 50px */
+            max-width: calc(100vw - 450px);
+        }
+
+        .survived {
+            color: green;
+        }
+
+        .perished {
+            color: red;
+        }
+    </style>
+</body>
+
+</html>
