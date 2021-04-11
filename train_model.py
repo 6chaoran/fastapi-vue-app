@@ -5,15 +5,22 @@ from sklearn.model_selection import train_test_split
 import pickle
 from utils import encode_cat_variables
 
+# define variables
 fnames_cat = ['Pclass', 'Sex', 'Embarked']
 fnames_num = ['Age', 'Fare', 'SibSp', 'Parch']
 fnames = fnames_cat + fnames_num
+
+# load data
 data = pd.read_csv('./data/titanic.csv')
+
+# split train / valid
 train, valid = train_test_split(data, stratify=data.Survived, train_size=0.7)
 
+# encode categorical variables
 train, le = encode_cat_variables(train, fnames_cat)
 valid, le = encode_cat_variables(valid, fnames_cat, le)
 
+# convert to lightgbm Dataset
 dtrain = lgb.Dataset(train[fnames].values, train.Survived)
 dvalid = lgb.Dataset(valid[fnames].values, valid.Survived)
 

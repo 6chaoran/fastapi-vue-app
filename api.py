@@ -1,20 +1,22 @@
-from typing import Optional
+# FastAPI
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+# Model
 import pickle
+import numpy as np
 import pandas as pd
 import lightgbm as lgb
 from utils import encode_cat_variables
-from pydantic import BaseModel, Field
-from fastapi.responses import FileResponse
-import numpy as np
 
-
+# load encoder
 with open('./saved_model/label_encoder.pkl', 'rb') as f:
     le = pickle.load(f)
+# load model
 model = lgb.Booster(model_file='./saved_model/model.txt')
 fnames = model.feature_name()
 
-
+# data model of predictors
 class TitanicFeature(BaseModel):
     Age: int = Field(..., example=20)
     Pclass: int = Field(..., example=1)
@@ -27,10 +29,15 @@ class TitanicFeature(BaseModel):
 
 app = FastAPI()
 
+# vue app URL
+# load ui from app.html
+
 
 @app.get("/app")
 def read_index():
     return FileResponse("./app.html")
+
+# POST method for model prediction
 
 
 @app.post("/predict")
