@@ -1,0 +1,84 @@
+<html lang="en">
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-app-bar app dense dark color="purple">
+                <v-app-bar-title>Titanic Demo</v-app-bar-title>
+            </v-app-bar>
+            <v-main>
+                <v-navigation-drawer right absolute>
+                    <v-container>
+                        <div class="my-3">Side Panel</div>
+                        <v-divider></v-divider>
+                        <div class="my-6">
+                            <v-text-field v-for="p in payload"
+                             v-model="p.value" 
+                             :key = "p.name"
+                             :label="p.name" dense outlined>
+                            </v-text-field>
+                        </div>
+                        <div class="my-3">
+                            <v-btn text color="purple" @click="call_api">predict</v-btn>
+                        </div>
+                    </v-container>
+                </v-navigation-drawer>
+                <v-container id="main">
+                    <h1>Payload</h1>
+                    {{ payload }}
+                    <h1 v-if="score">Model Score</h1>
+                    {{ score }}
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: function () {
+                return {
+                    payload: [
+                        { name: "Age", value: 20, type: "int" },
+                        { name: "Pclass", value: "1", type: "str", items: ["1", "2", "3"] },
+                        { name: "Sex", value: "male", type: "str", items: ["male", "female"] },
+                        { name: "SibSp", value: 1, type: "int" },
+                        { name: "Parch", value: 1, type: "int" },
+                        { name: "Fare", value: 120, type: "int" },
+                        { name: "Embarked", value: "S", type: "str", items: ["S", "C", "Q"] },],
+                    score: null
+                }
+            },
+            methods: {
+                call_api: function () {
+                    // reformat the payload from [{name: Age, value: 10}, ...] to {Age:10, ...}
+                    payload = this.payload.reduce((acc, cur) => ({ ...acc, [cur.name]: cur.value }), {})
+                    axios.post("/predict", payload)
+                        .then(resp => resp.data)
+                        .then(data => {
+                            this.score = data.score
+                        })
+                        .catch(e => console.log(e))
+                },
+            },
+        })
+    </script>
+    <style>
+        #main {
+            margin-right: 256px;
+            margin-left: 20px;
+        }
+    </style>
+</body>
+
+</html>
