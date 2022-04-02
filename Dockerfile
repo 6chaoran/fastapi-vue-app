@@ -8,4 +8,4 @@ COPY api.py ./app/main.py
 COPY utils.py app.html ./app/
 COPY ./saved_model ./app/saved_model
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
