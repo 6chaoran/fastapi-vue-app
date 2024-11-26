@@ -1,8 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
-name: Build and deploy Python app to Azure Web App - chaoran-app
+name: Build and deploy Python app to Azure Web App - chaoran-rag-app
 
 on:
   push:
@@ -15,37 +11,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python version
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Navigate to task-app directory
-        working-directory: task-app
-        run: |
-          echo "Switched to task-app directory"
+      - name: Change to task-app directory
+        run: cd task-app
 
       - name: Create and start virtual environment
-        working-directory: task-app
         run: |
           python -m venv venv
           source venv/bin/activate
-
-      - name: Install dependencies
-        working-directory: task-app
-        run: pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
       
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+
+      - name: Zip artifact for deployment
+        run: |
+          cd task-app
+          zip ../release.zip ./* -r
+
       - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
-            task-app
-            !task-app/venv/
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -53,18 +50,20 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
+    
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: python-app
-          path: ./task-app
-          
+
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'chaoran-app'
+          app-name: 'chaoran-rag-app'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BA16B0B62C814A6AB8AD7147D8F7CFAE }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6F0D751E11BF4A109DDD08F896895B43 }}
