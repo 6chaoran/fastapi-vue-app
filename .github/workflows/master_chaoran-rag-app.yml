@@ -10,6 +10,11 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  # AZURE_WEBAPP_NAME: my-web-app # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: './simple-app' # set this to the path to your web app project, defaults to the repository root
+
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,6 +34,7 @@ jobs:
       
       - name: Install dependencies
         run: pip install -r requirements.txt
+        working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
@@ -66,4 +72,5 @@ jobs:
         with:
           app-name: 'chaoran-rag-app'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_737571E39F3B4EE5AFA2C5C7A2230BA2 }}
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_f0fafa98f1244c3ba4c725b14980fef9 }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
