@@ -33,7 +33,7 @@ app = FastAPI()
 # load ui from app.html
 
 
-@app.get("/app")
+@app.get("/")
 def read_index():
     return FileResponse("./app.html")
 
